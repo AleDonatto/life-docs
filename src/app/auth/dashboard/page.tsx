@@ -7,13 +7,10 @@ export default function dashboardPage() {
     <div>
       <div>
         <div className="p-6 bg-gray-100 min-h-screen">
-
           <CardTramite />
 
-          
-  <TableTarmites />
-
-</div>
+          <TableTarmites />
+        </div>
       </div>
     </div>
   );
