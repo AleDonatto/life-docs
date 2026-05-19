@@ -1,6 +1,12 @@
+"use client"
+import { useRouter } from 'next/navigation'
 import React from 'react'
 
 export default function TableDocumnets() {
+  const router = useRouter()
+  const handleViewDocumentoById = () => {
+    router.push('/auth/documents/1')
+  }
   return (
     <div>
       <div className="flex items-center justify-between mb-6 mt-6">
@@ -121,6 +127,7 @@ export default function TableDocumnets() {
                 
                 <button
                   className="px-3 py-1 text-xs rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 transition"
+                  onClick={() => handleViewDocumentoById()}
                 >
                   Ver
                 </button>
