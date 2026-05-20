@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { ChangeEvent, useRef, useState } from "react";
 
 interface DocTramites {
   nombreTramite: string;
@@ -10,12 +10,67 @@ interface DocTramites {
   clasiificacion: string;
 }
 
+interface FileWithPreview extends File {
+  preview?: string;
+}
+
 export default function FormTramites() {
   const [dateNow, setdateNow] = useState(new Date());
+  const [files, setFiles] = useState<FileWithPreview[]>([]);
+  const [isDragging, setIsDragging] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<{ [key: string]: number }>({});
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [dateTramite, setdataTramite] = useState<DocTramites>(
     {} as DocTramites
   );
+
+  const isValidFile = (file: File): boolean => {
+    const validTypes = ['application/pdf'];
+    const isValidType = validTypes.includes(file.type);
+    const isValidSize = file.size <= 10 * 1024 * 1024; // 10MB max
+    
+    if (!isValidType) {
+      alert(`❌ El archivo "${file.name}" no es PDF. Solo se permiten archivos PDF.`);
+      return false;
+    }
+    
+    if (!isValidSize) {
+      alert(`❌ El archivo "${file.name}" excede 10MB. Por favor, reduce el tamaño.`);
+      return false;
+    }
+    
+    return true;
+  };
+
+  const processFiles = (selectedFiles: FileList | null) => {
+    if (!selectedFiles) return;
+    
+    const newFiles: FileWithPreview[] = [];
+    
+    Array.from(selectedFiles).forEach(file => {
+      if (isValidFile(file) && !files.some(f => f.name === file.name && f.size === file.size)) {
+        // Crear preview URL para el PDF (opcional, para mostrar miniatura)
+        const fileWithPreview = Object.assign(file, {
+          preview: URL.createObjectURL(file)
+        });
+        newFiles.push(fileWithPreview);
+      }
+    });
+    
+    if (newFiles.length > 0) {
+      setFiles(prev => [...prev, ...newFiles]);
+    }
+  };
+
+  const handleFileSelect = (e: ChangeEvent<HTMLInputElement>) => {
+    processFiles(e.target.files);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''; // Reset input
+    }
+  };
+
   return (
     <div>
       {/* <div>
@@ -148,9 +203,9 @@ export default function FormTramites() {
                  viewBox="0 0 24 24"
                  stroke="currentColor">
 
-              <path stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
+              <path strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
                     d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
 
@@ -269,9 +324,9 @@ export default function FormTramites() {
                  viewBox="0 0 24 24"
                  stroke="currentColor">
 
-              <path stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
+              <path strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
                     d="M7 8h10M7 12h6m-9 8h16a2 2 0 002-2V6a2 2 0 00-2-2H8l-4 4v10a2 2 0 002 2z" />
             </svg>
 
@@ -383,7 +438,7 @@ export default function FormTramites() {
 
         </div>
 
-        <div className="md:col-span-2">
+        <div className="md:col-span-2" onClick={() => !isUploading && fileInputRef.current?.click()}>
 
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Adjuntar archivos
@@ -391,6 +446,15 @@ export default function FormTramites() {
 
           <div className="border-2 border-dashed border-gray-300 rounded-2xl p-8 text-center hover:border-blue-400 transition cursor-pointer bg-gray-50">
 
+            <input
+              ref={fileInputRef}
+              type="file"
+              multiple
+              accept=".pdf,application/pdf"
+              onChange={handleFileSelect}
+              className="hidden"
+              disabled={isUploading}
+            />
             <svg xmlns="http://www.w3.org/2000/svg"
                  className="w-10 h-10 mx-auto text-gray-400"
                  fill="none"
@@ -408,7 +472,7 @@ export default function FormTramites() {
             </p>
 
             <p className="text-sm text-gray-400 mt-2">
-              PDF, DOCX, imágenes
+              Solo Archivos PDF
             </p>
 
           </div>

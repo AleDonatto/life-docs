@@ -1,7 +1,11 @@
+"use client"
+import { LogOut } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import React from "react";
 
 export default function layout({ children }: { children: React.ReactNode }) {
+  const router = useRouter()
   return (
     <div>
       <div>
@@ -77,7 +81,7 @@ export default function layout({ children }: { children: React.ReactNode }) {
     </nav>
 
     <div className="border-t border-gray-800 p-4">
-      <div className="flex items-center gap-3">
+      <div className="flex items-center justify-between gap-3">
         <div className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center">
           AJ
         </div>
@@ -85,6 +89,15 @@ export default function layout({ children }: { children: React.ReactNode }) {
         <div>
           <p className="text-sm font-medium">Alejandro</p>
           <p className="text-xs text-gray-400">Administrador</p>
+        </div>
+
+        <div>
+          <button className="hover:cursor-pointer" onClick={() => {
+            router.push('/')
+          }}>
+            <LogOut />
+          </button>
+          
         </div>
       </div>
     </div>
