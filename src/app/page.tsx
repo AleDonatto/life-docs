@@ -1,22 +1,58 @@
-"use client";
-import { Input } from "@/components/ui/input";
-import { ArrowUpIcon, Eye, EyeClosed, Lock, LogIn, User } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+'use client';
+import { Input } from '@/components/ui/input';
+import { ArrowUpIcon, Eye, EyeClosed, Lock, LogIn, User } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { useAuthStore } from './store/useAuthStore';
+import { loginUser } from './api/login';
+
+interface IFormLogin {
+  username: string;
+  password: string;
+}
 
 export default function Home() {
   const router = useRouter();
-
-  const handleLogin = () => {
-    router.push("/auth/dashboard");
-  };
-
-  const [showPassword, setshowPassword] = useState<boolean>(false)
-  const [isLoading, setisLoading] = useState<boolean>(false)
-
+  const { register, handleSubmit, getValues } = useForm<IFormLogin>({
+    defaultValues: {
+      username: '',
+      password: '',
+    },
+  });
+  const [showPassword, setshowPassword] = useState<boolean>(false);
+  const [isLoading, setisLoading] = useState<boolean>(false);
   const togglePasswordVisibility = () => {
     setshowPassword(!showPassword);
+  };
+  const { setUser } = useAuthStore();
+  const handleLogin = async () => {
+    setisLoading(true);
+    try {
+      const { username, password } = getValues();
+      const response = await loginUser(username, password);
+
+      console.log('response login', response);
+
+      if (response) {
+        console.log('response', response);
+        const { user, accessToken } = response;
+        const dataUser = {
+          username: user.username,
+          nombre: user.nombre,
+          grado: user.grado,
+          active: user.active,
+          role: user.rol,
+        };
+        setUser(dataUser, accessToken);
+        setisLoading(false);
+        router.push('/auth/dashboard');
+      }
+    } catch (error) {
+      setisLoading(false);
+      throw new Error('Error al iniciar sesión');
+    }
   };
 
   return (
@@ -25,7 +61,6 @@ export default function Home() {
       <div className="w-full max-w-md">
         {/* Tarjeta principal */}
         <div className="bg-white/10 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/20 p-8 md:p-10 transition-all duration-300 hover:shadow-indigo-500/10">
-          
           {/* Logo/Icono */}
           <div className="flex justify-center mb-6">
             <div className="bg-gradient-to-r from-gray-200 to-gray-300 p-3 rounded-full shadow-lg">
@@ -33,20 +68,20 @@ export default function Home() {
               <Lock />
             </div>
           </div>
-          
+
           <p className="text-center text-black text-sm mt-2 mb-8">
             Accede a tu cuenta con tus credenciales
           </p>
-          
+
           {/* Formulario */}
-          <form onSubmit={(e) => {
-            e.preventDefault()
-            handleLogin()
-          }} className="space-y-6">
+          <form onSubmit={handleSubmit(handleLogin)} className="space-y-6">
             {/* Campo de usuario */}
             <div className="space-y-1">
-              <label htmlFor="username" className="block text-sm font-medium text-black ml-1">
-                Usuario o correo
+              <label
+                htmlFor="username"
+                className="block text-sm font-medium text-black ml-1"
+              >
+                Usuario
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -56,25 +91,28 @@ export default function Home() {
                 <input
                   type="text"
                   id="username"
-                  name="username"
-                  // value={formData.username}
-                  onChange={() => {}}
+                  {...register('username', {
+                    required: 'El nombre de usuario es requerido',
+                  })}
                   className="w-full pl-10 pr-4 py-3 bg-white/20 border border-black/30 rounded-xl text-black placeholder-gray-800/70 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition"
-                  placeholder="usuario@ejemplo.com"
+                  placeholder="usuario"
                   required
                   autoComplete="username"
                   // disabled={isLoading}
                 />
               </div>
               <p className="text-xs text-black-200/60 ml-1 mt-1">
-                Ingresa tu nombre de usuario o email
+                Ingresa tu nombre de usuario
               </p>
             </div>
-            
+
             {/* Campo de contraseña */}
             <div className="space-y-1">
               <div className="flex justify-between items-center">
-                <label htmlFor="password" className="block text-sm font-medium text-black-100 ml-1">
+                <label
+                  htmlFor="password"
+                  className="block text-sm font-medium text-black-100 ml-1"
+                >
                   Contraseña
                 </label>
               </div>
@@ -86,26 +124,30 @@ export default function Home() {
                 <input
                   type={showPassword ? 'text' : 'password'}
                   id="password"
-                  name="password"
-                  // value={formData.password}
-                  onChange={() => {}}
+                  {...register('password', {
+                    required: 'Ingrese la contraseña',
+                  })}
                   className="w-full pl-10 pr-10 py-3 bg-white/20 border border-black/30 rounded-xl text-black placeholder-gray-800/70 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition"
                   placeholder="••••••••"
                   required
                   autoComplete="current-password"
                   disabled={isLoading}
                 />
+
                 <button
                   type="button"
                   onClick={togglePasswordVisibility}
                   className="absolute inset-y-0 right-0 pr-3 flex items-center text-black-300 hover:text-gray-700 hover:cursor-pointer transition"
                 >
-                  {showPassword ? <EyeClosed className="text-sm" /> : <Eye className="text-sm" />}
+                  {showPassword ? (
+                    <EyeClosed className="text-sm" />
+                  ) : (
+                    <Eye className="text-sm" />
+                  )}
                 </button>
               </div>
             </div>
-            
-            
+
             {/* Botón de submit */}
             <button
               type="submit"
@@ -124,12 +166,9 @@ export default function Home() {
                 </>
               )}
             </button>
-            
           </form>
         </div>
-        
       </div>
     </div>
-
   );
 }
