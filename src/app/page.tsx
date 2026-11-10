@@ -95,7 +95,7 @@ export default function Home() {
                     required: 'El nombre de usuario es requerido',
                   })}
                   className="w-full pl-10 pr-4 py-3 bg-white/20 border border-black/30 rounded-xl text-black placeholder-gray-800/70 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-transparent transition"
-                  placeholder="usuario"
+                  placeholder="Usuario"
                   required
                   autoComplete="username"
                   // disabled={isLoading}

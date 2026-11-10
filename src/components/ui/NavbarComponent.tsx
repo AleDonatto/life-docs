@@ -7,20 +7,21 @@ import { useAuthStore } from '@/app/store/useAuthStore';
 interface NavItem {
   label: string;
   href: string;
+  onlyForAdmin?: boolean;
 }
 
 const navItems: NavItem[] = [
-  { label: 'Inicio', href: '/auth/dashboard' },
-  { label: 'Documentos', href: '/auth/documents' },
-  { label: 'Tramites', href: '/auth/formalities' },
-  { label: 'Configuracion', href: '/auth/users' },
+  { label: 'Inicio', href: '/auth/dashboard', onlyForAdmin: false },
+  { label: 'Documentos', href: '/auth/documents', onlyForAdmin: false },
+  { label: 'Tramites', href: '/auth/formalities', onlyForAdmin: false },
+  { label: 'Configuracion', href: '/auth/users', onlyForAdmin: true },
 ];
 
 export default function NavbarComponent() {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
-  const { logout } = useAuthStore();
+  const { logout, user } = useAuthStore();
   const router = useRouter();
 
   const handleLogout = () => {
@@ -63,11 +64,16 @@ export default function NavbarComponent() {
             <div className="hidden md:flex items-center gap-1">
               {navItems.map((item) => {
                 const isActive = pathname === item.href;
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={`
+
+                if (
+                  item.onlyForAdmin === true &&
+                  String(user?.role) === 'admin'
+                ) {
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className={`
                     relative px-4 py-2 text-sm font-medium transition-colors rounded-lg
                     ${
                       isActive
@@ -75,13 +81,34 @@ export default function NavbarComponent() {
                         : 'text-gray-600 hover:text-gray-900'
                     }
                   `}
-                  >
-                    {item.label}
-                    {isActive && (
-                      <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1 h-1 bg-blue-600 rounded-full" />
-                    )}
-                  </Link>
-                );
+                    >
+                      {item.label}
+                      {isActive && (
+                        <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1 h-1 bg-blue-600 rounded-full" />
+                      )}
+                    </Link>
+                  ); // No renderizar el enlace si no es admin
+                } else if (item.onlyForAdmin === false) {
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className={`
+                    relative px-4 py-2 text-sm font-medium transition-colors rounded-lg
+                    ${
+                      isActive
+                        ? 'text-blue-600'
+                        : 'text-gray-600 hover:text-gray-900'
+                    }
+                  `}
+                    >
+                      {item.label}
+                      {isActive && (
+                        <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1 h-1 bg-blue-600 rounded-full" />
+                      )}
+                    </Link>
+                  );
+                }
               })}
             </div>
 
